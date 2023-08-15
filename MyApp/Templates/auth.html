@@ -1,10 +1,17 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Title</title>
+    <meta charset="UTF-8">
+    <meta name="google-signin-client_id" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Authentication</title>
 </head>
 <body>
-
+    <h1>Sign in with Google</h1>
+    <button onclick="handleSignIn()">Click here to sign in</button>
+    <!-- Include the Google API client library -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    gapi.load('auth2', function() (
+      gapi.auth2.init();
+    ));
 </body>
 </html>

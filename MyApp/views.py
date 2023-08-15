@@ -1,5 +1,8 @@
-import requests
-from django.shortcuts import render
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.contrib.auth import authenticate, login
+
 
 def payment_view(request):
     if request.method == 'POST':
@@ -18,7 +21,7 @@ def payment_view(request):
         payload = {
             'public_key': 'public_key',
             'tx_ref': transaction_id,
-            'amount': 1000,
+            'amount': 100000,
             'currency': 'NGN',
             'payment_type': 'card',
             'customer_email': email,
@@ -43,3 +46,38 @@ def payment_view(request):
 
     else:
         return render(request, 'payment.html')
+
+def google_auth(request):
+    # Redirect the user to the Google OAuth consent screen
+    auth_uri = f"{GOOGLE_AUTH_URI}?client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_REDIRECT_URI}&response_type=code&scope=email%20profile"
+    return redirect(auth_uri)
+
+def google_auth_callback(request):
+    # Get the authorization code from the callback
+    code = request.GET.get('code')
+
+    # Exchange the code for access and ID tokens
+    token_response = requests.post(GOOGLE_TOKEN_URI, data={
+        'code': code,
+        'client_id': GOOGLE_CLIENT_ID,
+        'client_secret': GOOGLE_CLIENT_SECRET,
+        'redirect_uri': GOOGLE_REDIRECT_URI,
+        'grant_type': 'authorization_code',
+    })
+
+    token_data = token_response.json()
+    access_token = token_data['access_token']
+
+    # Get user information from Google API
+    user_info_response = requests.get(GOOGLE_USER_INFO, headers={'Authorization': f'Bearer {access_token}'})
+    user_info = user_info_response.json()
+
+    # Authenticate and log in the user
+    user = authenticate(request, google_user_info=user_info)
+    if user is not None:
+        login(request, user)
+        return redirect('https://github.com/JohnsonMasino')  # Replace 'home' with the URL name for your homepage
+
+    return redirect('https://accounts.google.com/o/oauth2/auth')  # Redirect to the login page if authentication fails
+def my_view(request):
+    return render(request, 'auth.html')
